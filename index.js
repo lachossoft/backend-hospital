@@ -13,25 +13,22 @@ const app = express();
 
 app.use( cors() );
 
+//lectura y paseo del body
+
+app.use( express.json() );
+
 //base de datos 
 
 dbConection();
 
 
 
-
-
-
 //rutas
 
-app.get( '/', (req, res) =>{ 
+app.use('/api/usuarios', require('./routes/usuarios')); 
 
-    res.status(200).json({
-        ok: true,
-        msg: "Hola mundo"
-    });
 
-});
+
 
 
 app.listen( process.env.PORT, () =>{
