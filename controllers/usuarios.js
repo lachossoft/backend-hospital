@@ -2,19 +2,24 @@ const { res } = require('express');
 const bcrypt = require('bcryptjs');
 
 const Usuario = require('../models/usuario');
+const { generarJWT } = require('../helpers/jwt');
 
- const getUsuarios = async (req, res) =>{ 
+
+//obitne lista de usuarios
+
+const getUsuarios = async (req, res) =>{ 
 
     const usuario = await Usuario.find({}, 'nombre email role google' );
 
     res.status(200).json({
         ok: true,
         msg: "getusuario",
-        usuario
+        usuario,
     });
 }
 
 
+//crea usuarios
 
 const crearUsuarios = async (req, res) =>{ 
 
@@ -43,12 +48,17 @@ const crearUsuarios = async (req, res) =>{
         //guardar usuario
     
         await usuario.save();
+        
+        //generar token
+
+        const token = await generarJWT(usuario.id);
     
-    
+
         res.status(200).json({
             ok: true,
             msg: "crearusuario",
-            usuario
+            usuario,
+            token
         });
 
 
@@ -62,6 +72,8 @@ const crearUsuarios = async (req, res) =>{
     }
 
 }
+
+//actualiza usuarios
 
 const actualizarUsuario = async(req, res) =>{
     
@@ -97,6 +109,8 @@ const actualizarUsuario = async(req, res) =>{
 
         }
 
+        campos.email = email;
+
 
         const usuarioActualizao = await Usuario.findByIdAndUpdate(uid, campos, { new: true });
 
@@ -116,8 +130,54 @@ const actualizarUsuario = async(req, res) =>{
 
 }
 
+//borrar usuario
+
+const borrarUsuario = async (req, res) =>{
+
+
+    try{
+        
+        const uid = req.params.id;
+
+        //buscar usuarios por id
+
+        const usuarioDB = await Usuario.findById(uid);
+
+        if( !usuarioDB ){
+            return res.status(404).json({
+                ok: false,
+                msg: "No existe un usuario por ese id"
+            });
+        }
+
+        //borrar usuario
+
+        await Usuario.findByIdAndDelete(uid);
+
+
+
+        res.json({
+            ok:true,
+            uid,
+            msg: 'Usuario eliminado'
+        });
+
+
+
+
+    }catch(error){
+        console.log(error);
+        res.status(500).json({
+            ok: false,
+            msg: 'Error inesperado... revisar logs'
+        });
+    }
+
+}
+
 module.exports={
     getUsuarios,
     crearUsuarios,
     actualizarUsuario,
+    borrarUsuario
 }
